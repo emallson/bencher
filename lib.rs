@@ -48,7 +48,7 @@
 //!     bench.iter(|| {
 //!         vec![0u8; N]
 //!     });
-//! 
+//!
 //!     bench.bytes = N as u64;
 //! }
 //!
@@ -163,8 +163,8 @@ pub struct TestDesc {
 
 #[derive(Clone)]
 pub struct TestPaths {
-    pub file: PathBuf,         // e.g., compile-test/foo/bar/baz.rs
-    pub base: PathBuf,         // e.g., compile-test, auxiliary
+    pub file: PathBuf, // e.g., compile-test/foo/bar/baz.rs
+    pub base: PathBuf, // e.g., compile-test, auxiliary
     pub relative_dir: PathBuf, // e.g., foo/bar
 }
 
@@ -246,8 +246,7 @@ impl<T: Write> ConsoleTestState<T> {
         self.write_pretty("bench")
     }
 
-    pub fn write_short_result(&mut self, verbose: &str, quiet: &str)
-                              -> io::Result<()> {
+    pub fn write_short_result(&mut self, verbose: &str, quiet: &str) -> io::Result<()> {
         if self.quiet {
             self.write_pretty(quiet)
         } else {
@@ -276,11 +275,7 @@ impl<T: Write> ConsoleTestState<T> {
 
     pub fn write_run_start(&mut self, len: usize) -> io::Result<()> {
         self.total = len;
-        let noun = if len != 1 {
-            "tests"
-        } else {
-            "test"
-        };
+        let noun = if len != 1 { "tests" } else { "test" };
         self.write_plain(&format!("\nrunning {} {}\n", len, noun))
     }
 
@@ -401,9 +396,9 @@ pub fn fmt_bench_samples(bs: &BenchSamples) -> String {
     let deviation = (bs.ns_iter_summ.max - bs.ns_iter_summ.min) as usize;
 
     output.write_fmt(format_args!("{:>11} ns/iter (+/- {})",
-                                  fmt_thousands_sep(median, ','),
-                                  fmt_thousands_sep(deviation, ',')))
-          .unwrap();
+                                fmt_thousands_sep(median, ','),
+                                fmt_thousands_sep(deviation, ',')))
+        .unwrap();
     if bs.mb_s != 0 {
         output.write_fmt(format_args!(" = {} MB/s", bs.mb_s)).unwrap();
     }
@@ -422,9 +417,7 @@ pub fn run_tests_console(opts: &TestOpts, tests: Vec<TestDescAndFn>) -> io::Resu
                 try!(st.write_result(&result));
                 match result {
                     TrIgnored => st.ignored += 1,
-                    TrBench(_) => {
-                        st.measured += 1
-                    }
+                    TrBench(_) => st.measured += 1,
                 }
                 Ok(())
             }
@@ -497,8 +490,8 @@ fn run_tests<F>(opts: &TestOpts, tests: Vec<TestDescAndFn>, mut callback: F) -> 
     let filtered_tests = filter_tests(opts, tests);
 
     let filtered_descs = filtered_tests.iter()
-                                       .map(|t| t.desc.clone())
-                                       .collect();
+        .map(|t| t.desc.clone())
+        .collect();
 
     try!(callback(TeFiltered(filtered_descs)));
 
@@ -522,8 +515,8 @@ fn filter_tests(opts: &TestOpts, tests: Vec<TestDescAndFn>) -> Vec<TestDescAndFn
         None => filtered,
         Some(ref filter) => {
             filtered.into_iter()
-                    .filter(|test| test.desc.name.contains(&filter[..]))
-                    .collect()
+                .filter(|test| test.desc.name.contains(&filter[..]))
+                .collect()
         }
     };
 
@@ -533,7 +526,7 @@ fn filter_tests(opts: &TestOpts, tests: Vec<TestDescAndFn>) -> Vec<TestDescAndFn
     } else {
         fn filter(test: TestDescAndFn) -> Option<TestDescAndFn> {
             if test.desc.ignore {
-                let TestDescAndFn {desc, testfn} = test;
+                let TestDescAndFn { desc, testfn } = test;
                 Some(TestDescAndFn {
                     desc: TestDesc { ignore: false, ..desc },
                     testfn: testfn,
@@ -551,12 +544,9 @@ fn filter_tests(opts: &TestOpts, tests: Vec<TestDescAndFn>) -> Vec<TestDescAndFn
     filtered
 }
 
-fn run_test(_opts: &TestOpts,
-            force_ignore: bool,
-            test: TestDescAndFn) -> MonitorMsg
-{
+fn run_test(_opts: &TestOpts, force_ignore: bool, test: TestDescAndFn) -> MonitorMsg {
 
-    let TestDescAndFn {desc, testfn} = test;
+    let TestDescAndFn { desc, testfn } = test;
 
     if force_ignore || desc.ignore {
         return (desc, TrIgnored, Vec::new());
@@ -607,6 +597,19 @@ impl Bencher {
             black_box(inner());
         }
         self.dur = start.elapsed();
+    }
+
+    pub fn iter_with_setup<T, R, F, G>(&mut self, mut setup: F, mut inner: G)
+        where F: FnMut() -> R,
+              G: FnMut(R) -> T
+    {
+        let k = self.iterations;
+        for _ in 0..k {
+            let data = setup();
+            let start = Instant::now();
+            black_box(inner(data));
+            self.dur += start.elapsed();
+        }
     }
 
     pub fn ns_elapsed(&mut self) -> u64 {
@@ -735,4 +738,3 @@ pub mod bench {
         bs.bench_n(1, f);
     }
 }
-

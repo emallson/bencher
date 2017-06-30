@@ -875,4 +875,3 @@ mod tests {
         assert_eq!([1e30f64, 1.2f64, -1e30f64].sum(), 1.2);
     }
 }
-
